@@ -1,0 +1,44 @@
+import { Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn, JoinColumn } from 'typeorm';
+import { UserEntity } from '../users/user.entity';
+
+export enum AccountType {
+  CHECKING = 'CHECKING',
+  SAVINGS = 'SAVINGS',
+}
+
+export enum Currency {
+  PEN = 'PEN',
+  USD = 'USD',
+}
+
+@Entity('accounts')
+export class AccountEntity {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Index({ unique: true })
+  @Column({ length: 24 })
+  accountNumber: string;
+
+  @Column({ type: 'enum', enum: AccountType })
+  type: AccountType;
+
+  @Column({ type: 'enum', enum: Currency })
+  currency: Currency;
+
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  balance: string;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @Column()
+  ownerId: string;
+
+  @ManyToOne(() => UserEntity)
+  @JoinColumn({ name: 'ownerId' })
+  owner: UserEntity;
+
+  @CreateDateColumn()
+  createdAt: Date;
+}
