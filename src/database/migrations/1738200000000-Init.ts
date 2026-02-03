@@ -4,15 +4,19 @@ export class Init1738200000000 implements MigrationInterface {
     name = 'Init1738200000000'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
+        // Enable UUID extension for PostgreSQL
+        await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
+
         // Create users table
         await queryRunner.createTable(new Table({
             name: 'users',
             columns: [
                 {
                     name: 'id',
-                    type: 'varchar',
-                    length: '36',
+                    type: 'uuid',
                     isPrimary: true,
+                    isGenerated: true,
+                    generationStrategy: 'uuid',
                 },
                 {
                     name: 'email',
@@ -61,9 +65,10 @@ export class Init1738200000000 implements MigrationInterface {
             columns: [
                 {
                     name: 'id',
-                    type: 'varchar',
-                    length: '36',
+                    type: 'uuid',
                     isPrimary: true,
+                    isGenerated: true,
+                    generationStrategy: 'uuid',
                 },
                 {
                     name: 'idempotencyKey',
@@ -73,8 +78,7 @@ export class Init1738200000000 implements MigrationInterface {
                 },
                 {
                     name: 'accountId',
-                    type: 'varchar',
-                    length: '255',
+                    type: 'uuid',
                     isNullable: false,
                 },
                 {
@@ -131,9 +135,10 @@ export class Init1738200000000 implements MigrationInterface {
             columns: [
                 {
                     name: 'id',
-                    type: 'varchar',
-                    length: '36',
+                    type: 'uuid',
                     isPrimary: true,
+                    isGenerated: true,
+                    generationStrategy: 'uuid',
                 },
                 {
                     name: 'accountNumber',
@@ -165,8 +170,7 @@ export class Init1738200000000 implements MigrationInterface {
                 },
                 {
                     name: 'ownerId',
-                    type: 'varchar',
-                    length: '255',
+                    type: 'uuid',
                     isNullable: false,
                 },
                 {

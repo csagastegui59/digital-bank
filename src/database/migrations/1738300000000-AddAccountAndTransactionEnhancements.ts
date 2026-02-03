@@ -13,8 +13,7 @@ export class AddAccountAndTransactionEnhancements1738300000000 implements Migrat
     // Add destinationAccountId to transactions
     await queryRunner.addColumn('transactions', new TableColumn({
       name: 'destinationAccountId',
-      type: 'varchar',
-      length: '36',
+      type: 'uuid',
       isNullable: true,
     }));
 

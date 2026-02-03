@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { RefreshStrategy } from './refresh.strategy';
+import { SignupRateLimiterService } from './signup-rate-limiter.service';
 import { AccountsModule } from '../accounts/accounts.module';
 
 @Module({
@@ -17,6 +18,6 @@ import { AccountsModule } from '../accounts/accounts.module';
     AccountsModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RefreshStrategy],
+  providers: [AuthService, JwtStrategy, RefreshStrategy, SignupRateLimiterService],
 })
 export class AuthModule {}
