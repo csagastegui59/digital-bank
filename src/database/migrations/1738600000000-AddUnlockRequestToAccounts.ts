@@ -11,9 +11,29 @@ export class AddUnlockRequestToAccounts1738600000000 implements MigrationInterfa
         isNullable: false,
       })
     );
+
+    await queryRunner.addColumn(
+      'accounts',
+      new TableColumn({
+        name: 'blockedAt',
+        type: 'timestamp',
+        isNullable: true,
+      })
+    );
+
+    await queryRunner.addColumn(
+      'accounts',
+      new TableColumn({
+        name: 'unlockRequestedAt',
+        type: 'timestamp',
+        isNullable: true,
+      })
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.dropColumn('accounts', 'unlockRequestedAt');
+    await queryRunner.dropColumn('accounts', 'blockedAt');
     await queryRunner.dropColumn('accounts', 'isUnlockRequest');
   }
 }

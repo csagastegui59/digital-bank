@@ -35,6 +35,12 @@ export class AccountEntity {
   @Column({ default: false })
   isUnlockRequest: boolean;
 
+  @Column({ type: 'timestamp', nullable: true })
+  blockedAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  unlockRequestedAt: Date | null;
+
   @Column()
   ownerId: string;
 

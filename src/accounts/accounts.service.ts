@@ -136,6 +136,7 @@ export class AccountsService {
     }
     
     account.isUnlockRequest = true;
+    account.unlockRequestedAt = new Date();
     return await this.accountsRepo.save(account);
   }
 
@@ -170,6 +171,7 @@ export class AccountsService {
   async blockAccount(accountId: string): Promise<AccountEntity> {
     const account = await this.findById(accountId);
     account.isActive = false;
+    account.blockedAt = new Date();
     return await this.accountsRepo.save(account);
   }
 
@@ -178,6 +180,8 @@ export class AccountsService {
     const account = await this.findById(accountId);
     account.isActive = true;
     account.isUnlockRequest = false;
+    account.blockedAt = null;
+    account.unlockRequestedAt = null;
     return await this.accountsRepo.save(account);
   }
 
