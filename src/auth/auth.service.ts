@@ -33,6 +33,8 @@ export class AuthService {
 
     // Create user
     const user = this.usersRepo.create({
+      firstname: signupDto.firstname,
+      lastname: signupDto.lastname,
       email: signupDto.email,
       passwordHash,
       role: signupDto.role,
@@ -49,7 +51,13 @@ export class AuthService {
     await this.saveRefreshTokenHash(savedUser.id, tokens.refreshToken);
 
     return {
-      user: { id: savedUser.id, email: savedUser.email, role: savedUser.role },
+      user: { 
+        id: savedUser.id, 
+        email: savedUser.email, 
+        role: savedUser.role,
+        firstname: savedUser.firstname,
+        lastname: savedUser.lastname,
+      },
       ...tokens,
     };
   }
@@ -64,7 +72,16 @@ export class AuthService {
     const tokens = await this.issueTokens(user);
     await this.saveRefreshTokenHash(user.id, tokens.refreshToken);
 
-    return { user: { id: user.id, email: user.email, role: user.role }, ...tokens };
+    return { 
+      user: { 
+        id: user.id, 
+        email: user.email, 
+        role: user.role,
+        firstname: user.firstname,
+        lastname: user.lastname,
+      }, 
+      ...tokens 
+    };
   }
 
   async refresh(userId: string, refreshToken: string) {

@@ -11,6 +11,12 @@ export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ length: 255 })
+  firstname: string;
+
+  @Column({ length: 255 })
+  lastname: string;
+
   @Index({ unique: true })
   @Column({ length: 120 })
   email: string;

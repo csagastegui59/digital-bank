@@ -70,6 +70,20 @@ export class AccountsService {
     return account;
   }
 
+  // Get account by account number
+  async findByAccountNumber(accountNumber: string): Promise<AccountEntity> {
+    const account = await this.accountsRepo.findOne({
+      where: { accountNumber },
+      relations: ['owner'],
+    });
+
+    if (!account) {
+      throw new AccountNotFoundException();
+    }
+
+    return account;
+  }
+
   // Get user's accounts
   async findByUserId(userId: string): Promise<AccountEntity[]> {
     return await this.accountsRepo.find({
@@ -140,9 +154,9 @@ export class AccountsService {
   }
 
   private generateAccountNumber(): string {
-    // Generate a 20-digit account number
-    const timestamp = Date.now().toString();
+    // Generate a 16-digit account number for consistency
+    const timestamp = Date.now().toString().slice(-10); // Last 10 digits
     const random = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
-    return (timestamp + random).slice(0, 20);
+    return timestamp + random; // 16 digits total
   }
 }

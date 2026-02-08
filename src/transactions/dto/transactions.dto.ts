@@ -11,12 +11,12 @@ export class TransferDto {
   fromAccountId: string;
 
   @ApiProperty({
-    description: 'Destination account ID',
-    example: 'a12bc34d-56ef-7890-b123-4c56d7e8f901',
+    description: 'Destination account number (16 digits)',
+    example: '1234567890123456',
   })
   @IsNotEmpty()
   @IsString()
-  toAccountId: string;
+  toAccountNumber: string;
 
   @ApiProperty({
     description: 'Transfer amount (minimum 0.01)',

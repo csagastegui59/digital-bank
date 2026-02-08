@@ -4,6 +4,22 @@ import { UserRole } from '../../entities/users/user.entity';
 
 export class SignupDto {
   @ApiProperty({
+    description: 'User first name(s)',
+    example: 'Christian Enrique',
+  })
+  @IsString({ message: 'First name must be a string' })
+  @IsNotEmpty({ message: 'First name is required' })
+  firstname: string;
+
+  @ApiProperty({
+    description: 'User last name(s)',
+    example: 'Gonzales Garcia',
+  })
+  @IsString({ message: 'Last name must be a string' })
+  @IsNotEmpty({ message: 'Last name is required' })
+  lastname: string;
+
+  @ApiProperty({
     description: 'User email address',
     example: 'user@example.com',
   })

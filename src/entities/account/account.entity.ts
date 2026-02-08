@@ -17,7 +17,7 @@ export class AccountEntity {
   id: string;
 
   @Index({ unique: true })
-  @Column({ length: 24 })
+  @Column({ length: 16 })
   accountNumber: string;
 
   @Column({ type: 'enum', enum: AccountType })

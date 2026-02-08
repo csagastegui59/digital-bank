@@ -64,9 +64,12 @@ export class TransactionsController {
       throw new ForbiddenException('You can only transfer from your own accounts');
     }
 
+    // Find destination account by account number
+    const toAccount = await this.accountsService.findByAccountNumber(dto.toAccountNumber);
+
     return await this.transactionsService.transfer(
       dto.fromAccountId,
-      dto.toAccountId,
+      toAccount.id,
       dto.amount.toString(),
       dto.description,
     );
