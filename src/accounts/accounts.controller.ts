@@ -84,4 +84,55 @@ export class AccountsController {
   async deactivateAccount(@Param('accountId') accountId: string) {
     return await this.accountsService.deactivateAccount(accountId);
   }
+
+  @ApiOperation({ summary: 'Block an account (Admin or Owner)' })
+  @ApiParam({ name: 'accountId', description: 'Account ID' })
+  @ApiResponse({ status: 200, description: 'Account blocked successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Can only block own accounts' })
+  @ApiResponse({ status: 404, description: 'Account not found' })
+  @Patch(':accountId/block')
+  async blockAccount(
+    @Param('accountId') accountId: string,
+    @GetUser() user: any,
+  ) {
+    const account = await this.accountsService.findById(accountId);
+    
+    // Only admin or owner can block
+    if (account.ownerId !== user.userId && user.role !== UserRole.ADMIN) {
+      throw new UnauthorizedException('You can only block your own accounts');
+    }
+
+    return await this.accountsService.blockAccount(accountId);
+  }
+
+  @ApiOperation({ summary: 'Unblock an account (Admin only)' })
+  @ApiParam({ name: 'accountId', description: 'Account ID' })
+  @ApiResponse({ status: 200, description: 'Account unblocked successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  @ApiResponse({ status: 404, description: 'Account not found' })
+  @Patch(':accountId/unblock')
+  @Roles(UserRole.ADMIN)
+  async unblockAccount(@Param('accountId') accountId: string) {
+    return await this.accountsService.unblockAccount(accountId);
+  }
+
+  @ApiOperation({ summary: 'Request account unlock (Owner only)' })
+  @ApiParam({ name: 'accountId', description: 'Account ID' })
+  @ApiResponse({ status: 200, description: 'Unlock request submitted' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Can only request unlock for own accounts' })
+  @ApiResponse({ status: 404, description: 'Account not found' })
+  @Patch(':accountId/request-unlock')
+  async requestUnlock(
+    @Param('accountId') accountId: string,
+    @GetUser() user: any,
+  ) {
+    const account = await this.accountsService.findById(accountId);
+    
+    // Only owner can request unlock
+    if (account.ownerId !== user.userId && user.role !== UserRole.ADMIN) {
+      throw new UnauthorizedException('You can only request unlock for your own accounts');
+    }
+
+    return await this.accountsService.requestUnlock(accountId);
+  }
 }

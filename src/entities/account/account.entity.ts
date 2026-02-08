@@ -32,6 +32,9 @@ export class AccountEntity {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ default: false })
+  isUnlockRequest: boolean;
+
   @Column()
   ownerId: string;
 

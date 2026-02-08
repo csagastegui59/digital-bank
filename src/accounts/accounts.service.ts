@@ -109,6 +109,49 @@ export class AccountsService {
     });
   }
 
+  // Get blocked/inactive accounts (admin only)
+  async findBlocked(): Promise<AccountEntity[]> {
+    return await this.accountsRepo.find({
+      where: { isActive: false },
+      relations: ['owner'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  // Get accounts with unlock requests (admin only)
+  async findUnlockRequests(): Promise<AccountEntity[]> {
+    return await this.accountsRepo.find({
+      where: { isActive: false, isUnlockRequest: true },
+      relations: ['owner'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  // Request account unlock (owner only)
+  async requestUnlock(accountId: string): Promise<AccountEntity> {
+    const account = await this.findById(accountId);
+    
+    if (account.isActive) {
+      throw new InvalidOperationException('La cuenta ya está activa');
+    }
+    
+    account.isUnlockRequest = true;
+    return await this.accountsRepo.save(account);
+  }
+
+  // Search accounts by various criteria (admin only)
+  async searchAccounts(query: string): Promise<AccountEntity[]> {
+    const queryBuilder = this.accountsRepo
+      .createQueryBuilder('account')
+      .leftJoinAndSelect('account.owner', 'owner')
+      .where('account.accountNumber LIKE :query', { query: `%${query}%` })
+      .orWhere('account.id = :exactQuery', { exactQuery: query })
+      .orWhere('account.ownerId = :exactQuery', { exactQuery: query })
+      .orderBy('account.createdAt', 'DESC');
+
+    return await queryBuilder.getMany();
+  }
+
   // Activate account (admin only)
   async activateAccount(accountId: string): Promise<AccountEntity> {
     const account = await this.findById(accountId);
@@ -120,6 +163,21 @@ export class AccountsService {
   async deactivateAccount(accountId: string): Promise<AccountEntity> {
     const account = await this.findById(accountId);
     account.isActive = false;
+    return await this.accountsRepo.save(account);
+  }
+
+  // Block account (admin or owner)
+  async blockAccount(accountId: string): Promise<AccountEntity> {
+    const account = await this.findById(accountId);
+    account.isActive = false;
+    return await this.accountsRepo.save(account);
+  }
+
+  // Unblock account (admin only)
+  async unblockAccount(accountId: string): Promise<AccountEntity> {
+    const account = await this.findById(accountId);
+    account.isActive = true;
+    account.isUnlockRequest = false;
     return await this.accountsRepo.save(account);
   }
 

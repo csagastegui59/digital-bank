@@ -64,8 +64,23 @@ export class TransactionsController {
       throw new ForbiddenException('You can only transfer from your own accounts');
     }
 
+    // Check if source account is blocked
+    if (!fromAccount.isActive) {
+      throw new ForbiddenException('No puedes enviar fondos desde una cuenta bloqueada. Solicita un desbloqueo.');
+    }
+
     // Find destination account by account number
     const toAccount = await this.accountsService.findByAccountNumber(dto.toAccountNumber);
+
+    // Check if destination account is blocked
+    if (!toAccount.isActive) {
+      throw new ForbiddenException('La cuenta a la que intentas transferir está actualmente bloqueada');
+    }
+
+    // Prevent transfers to the same account
+    if (fromAccount.id === toAccount.id) {
+      throw new ForbiddenException('No puedes transferir a la misma cuenta de origen');
+    }
 
     return await this.transactionsService.transfer(
       dto.fromAccountId,
