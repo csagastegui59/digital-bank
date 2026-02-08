@@ -32,8 +32,18 @@ export class AddUnlockRequestToAccounts1738600000000 implements MigrationInterfa
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropColumn('accounts', 'unlockRequestedAt');
-    await queryRunner.dropColumn('accounts', 'blockedAt');
-    await queryRunner.dropColumn('accounts', 'isUnlockRequest');
+    const table = await queryRunner.getTable('accounts');
+    
+    if (table?.findColumnByName('unlockRequestedAt')) {
+      await queryRunner.dropColumn('accounts', 'unlockRequestedAt');
+    }
+    
+    if (table?.findColumnByName('blockedAt')) {
+      await queryRunner.dropColumn('accounts', 'blockedAt');
+    }
+    
+    if (table?.findColumnByName('isUnlockRequest')) {
+      await queryRunner.dropColumn('accounts', 'isUnlockRequest');
+    }
   }
 }
