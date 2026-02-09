@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards, UnauthorizedException, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -31,8 +31,13 @@ export class AccountsController {
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   @Get('pending')
   @Roles(UserRole.ADMIN)
-  async getPendingAccounts() {
-    return await this.accountsService.findPending();
+  async getPendingAccounts(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    return await this.accountsService.findPending(pageNum, limitNum);
   }
 
   @ApiOperation({ summary: 'Get accounts by user ID' })

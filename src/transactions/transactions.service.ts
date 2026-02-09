@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { TransactionEntity, TxType, TxStatus } from '../entities/transactions/transaction.entity';
-import { AccountsService } from '../accounts/accounts.service';
+import { AccountsService, PaginatedResult } from '../accounts/accounts.service';
 import { Currency } from '../entities/account/account.entity';
 import { 
   InvalidOperationException,
@@ -181,7 +181,7 @@ export class TransactionsService {
     minAmount?: string;
     maxAmount?: string;
     currency?: Currency;
-  }): Promise<TransactionEntity[]> {
+  }, page: number = 1, limit: number = 10): Promise<PaginatedResult<TransactionEntity>> {
     const queryBuilder = this.transactionsRepo
       .createQueryBuilder('tx')
       .leftJoinAndSelect('tx.account', 'account')
@@ -196,7 +196,7 @@ export class TransactionsService {
         queryBuilder.andWhere('tx.id = :transactionId', { transactionId: filters.transactionId });
       } else {
         // If not a valid UUID, return empty
-        return [];
+        return { data: [], total: 0, page, totalPages: 0 };
       }
     }
 
@@ -217,7 +217,7 @@ export class TransactionsService {
             { accountId: account.id }
           );
         } else {
-          return [];
+          return { data: [], total: 0, page, totalPages: 0 };
         }
       }
     }
@@ -231,7 +231,7 @@ export class TransactionsService {
           { userId: filters.userId }
         );
       } else {
-        return [];
+        return { data: [], total: 0, page, totalPages: 0 };
       }
     }
 
@@ -254,7 +254,18 @@ export class TransactionsService {
 
     queryBuilder.orderBy('tx.createdAt', 'DESC');
 
-    return await queryBuilder.getMany();
+    const skip = (page - 1) * limit;
+    const [data, total] = await queryBuilder
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   private getExchangeRate(fromCurrency: Currency, toCurrency: Currency): number {

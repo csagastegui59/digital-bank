@@ -33,7 +33,11 @@ export class TransactionsController {
     @Query('minAmount') minAmount?: string,
     @Query('maxAmount') maxAmount?: string,
     @Query('currency') currency?: Currency,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
   ) {
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
     return await this.transactionsService.searchTransactions({
       transactionId,
       accountId,
@@ -41,7 +45,7 @@ export class TransactionsController {
       minAmount,
       maxAmount,
       currency,
-    });
+    }, pageNum, limitNum);
   }
 
   @ApiOperation({ summary: 'Get all transactions (Admin only)' })

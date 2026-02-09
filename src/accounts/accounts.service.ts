@@ -8,6 +8,13 @@ import {
   InvalidOperationException 
 } from '../common/exceptions/business.exception';
 
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
 @Injectable()
 export class AccountsService {
   constructor(
@@ -120,12 +127,23 @@ export class AccountsService {
   }
 
   // Get accounts with unlock requests (admin only)
-  async findUnlockRequests(): Promise<AccountEntity[]> {
-    return await this.accountsRepo.find({
+  async findUnlockRequests(page: number = 1, limit: number = 10): Promise<PaginatedResult<AccountEntity>> {
+    const skip = (page - 1) * limit;
+    
+    const [data, total] = await this.accountsRepo.findAndCount({
       where: { isActive: false, isUnlockRequest: true },
       relations: ['owner'],
       order: { createdAt: 'DESC' },
+      skip,
+      take: limit,
     });
+
+    return {
+      data,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   // Request account unlock (owner only)
@@ -142,7 +160,7 @@ export class AccountsService {
   }
 
   // Search accounts by various criteria (admin only)
-  async searchAccounts(query: string): Promise<AccountEntity[]> {
+  async searchAccounts(query: string, page: number = 1, limit: number = 10): Promise<PaginatedResult<AccountEntity>> {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const isUuid = uuidRegex.test(query);
 
@@ -160,7 +178,18 @@ export class AccountsService {
 
     queryBuilder.orderBy('account.createdAt', 'DESC');
 
-    return await queryBuilder.getMany();
+    const skip = (page - 1) * limit;
+    const [data, total] = await queryBuilder
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   // Activate account (admin only)

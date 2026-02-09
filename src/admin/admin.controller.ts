@@ -24,8 +24,13 @@ export class AdminController {
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   @Roles(UserRole.ADMIN)
   @Get('accounts/blocked')
-  async getBlockedAccounts() {
-    return await this.accountsService.findBlocked();
+  async getBlockedAccounts(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    return await this.accountsService.findBlocked(pageNum, limitNum);
   }
 
   @ApiOperation({ summary: 'Get accounts with unlock requests (Admin only)' })
@@ -33,8 +38,13 @@ export class AdminController {
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   @Roles(UserRole.ADMIN)
   @Get('accounts/unlock-requests')
-  async getUnlockRequests() {
-    return await this.accountsService.findUnlockRequests();
+  async getUnlockRequests(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    return await this.accountsService.findUnlockRequests(pageNum, limitNum);
   }
 
   @ApiOperation({ summary: 'Search accounts by ID, user ID, or account number (Admin only)' })
@@ -42,11 +52,17 @@ export class AdminController {
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   @Roles(UserRole.ADMIN)
   @Get('accounts/search')
-  async searchAccounts(@Query('q') query: string) {
+  async searchAccounts(
+    @Query('q') query: string,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
     if (!query || query.trim() === '') {
-      return [];
+      return { data: [], total: 0, page: 1, totalPages: 0 };
     }
-    return await this.accountsService.searchAccounts(query);
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    return await this.accountsService.searchAccounts(query, pageNum, limitNum);
   }
 
   @ApiOperation({ summary: 'Unblock an account (Admin only)' })
