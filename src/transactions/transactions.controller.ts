@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards, ForbiddenException } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards, ForbiddenException, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -8,6 +8,7 @@ import { TransactionsService } from './transactions.service';
 import { TransferDto } from './dto/transactions.dto';
 import { GetUser } from '../auth/get-user.decorator';
 import { AccountsService } from '../accounts/accounts.service';
+import { Currency } from '../entities/account/account.entity';
 
 @ApiTags('transactions')
 @ApiBearerAuth('JWT-auth')
@@ -18,6 +19,30 @@ export class TransactionsController {
     private transactionsService: TransactionsService,
     private accountsService: AccountsService,
   ) {}
+
+  @ApiOperation({ summary: 'Search transactions with filters (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Returns filtered transactions' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  @Get('search')
+  @Roles(UserRole.ADMIN)
+  async searchTransactions(
+    @Query('transactionId') transactionId?: string,
+    @Query('accountId') accountId?: string,
+    @Query('userId') userId?: string,
+    @Query('minAmount') minAmount?: string,
+    @Query('maxAmount') maxAmount?: string,
+    @Query('currency') currency?: Currency,
+  ) {
+    return await this.transactionsService.searchTransactions({
+      transactionId,
+      accountId,
+      userId,
+      minAmount,
+      maxAmount,
+      currency,
+    });
+  }
 
   @ApiOperation({ summary: 'Get all transactions (Admin only)' })
   @ApiResponse({ status: 200, description: 'Returns all transactions' })
@@ -39,7 +64,6 @@ export class TransactionsController {
     @Param('userId') userId: string,
     @GetUser() currentUser: any,
   ) {
-    // Check authorization: admin or owner
     if (currentUser.role !== UserRole.ADMIN && currentUser.userId !== userId) {
       throw new ForbiddenException('You can only view your own transactions');
     }

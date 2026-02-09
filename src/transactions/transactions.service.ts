@@ -173,6 +173,90 @@ export class TransactionsService {
     });
   }
 
+  // Search transactions with filters (admin only)
+  async searchTransactions(filters: {
+    transactionId?: string;
+    accountId?: string;
+    userId?: string;
+    minAmount?: string;
+    maxAmount?: string;
+    currency?: Currency;
+  }): Promise<TransactionEntity[]> {
+    const queryBuilder = this.transactionsRepo
+      .createQueryBuilder('tx')
+      .leftJoinAndSelect('tx.account', 'account')
+      .leftJoinAndSelect('tx.destinationAccount', 'destinationAccount')
+      .leftJoinAndSelect('account.owner', 'accountOwner')
+      .leftJoinAndSelect('destinationAccount.owner', 'destinationOwner');
+
+    // Filter by transaction ID
+    if (filters.transactionId) {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(filters.transactionId)) {
+        queryBuilder.andWhere('tx.id = :transactionId', { transactionId: filters.transactionId });
+      } else {
+        // If not a valid UUID, return empty
+        return [];
+      }
+    }
+
+    // Filter by account ID
+    if (filters.accountId) {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(filters.accountId)) {
+        queryBuilder.andWhere(
+          '(tx.accountId = :accountId OR tx.destinationAccountId = :accountId)',
+          { accountId: filters.accountId }
+        );
+      } else {
+        // Try to find account by account number
+        const account = await this.accountsService.findByAccountNumber(filters.accountId);
+        if (account) {
+          queryBuilder.andWhere(
+            '(tx.accountId = :accountId OR tx.destinationAccountId = :accountId)',
+            { accountId: account.id }
+          );
+        } else {
+          return [];
+        }
+      }
+    }
+
+    // Filter by user ID
+    if (filters.userId) {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(filters.userId)) {
+        queryBuilder.andWhere(
+          '(account.ownerId = :userId OR destinationAccount.ownerId = :userId)',
+          { userId: filters.userId }
+        );
+      } else {
+        return [];
+      }
+    }
+
+    // Filter by amount range
+    if (filters.minAmount) {
+      queryBuilder.andWhere('CAST(tx.amount AS DECIMAL) >= :minAmount', { 
+        minAmount: parseFloat(filters.minAmount) 
+      });
+    }
+    if (filters.maxAmount) {
+      queryBuilder.andWhere('CAST(tx.amount AS DECIMAL) <= :maxAmount', { 
+        maxAmount: parseFloat(filters.maxAmount) 
+      });
+    }
+
+    // Filter by currency
+    if (filters.currency) {
+      queryBuilder.andWhere('account.currency = :currency', { currency: filters.currency });
+    }
+
+    queryBuilder.orderBy('tx.createdAt', 'DESC');
+
+    return await queryBuilder.getMany();
+  }
+
   private getExchangeRate(fromCurrency: Currency, toCurrency: Currency): number {
     if (fromCurrency === Currency.USD && toCurrency === Currency.PEN) {
       return EXCHANGE_RATES.USD_TO_PEN;
