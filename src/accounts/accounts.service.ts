@@ -109,21 +109,43 @@ export class AccountsService {
   }
 
   // Get pending accounts (admin only)
-  async findPending(): Promise<AccountEntity[]> {
-    return await this.accountsRepo.find({
+  async findPending(page: number = 1, limit: number = 10): Promise<PaginatedResult<AccountEntity>> {
+    const skip = (page - 1) * limit;
+    
+    const [data, total] = await this.accountsRepo.findAndCount({
       where: { isPending: true },
       relations: ['owner'],
       order: { createdAt: 'DESC' },
+      skip,
+      take: limit,
     });
+
+    return {
+      data,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   // Get blocked/inactive accounts (admin only)
-  async findBlocked(): Promise<AccountEntity[]> {
-    return await this.accountsRepo.find({
+  async findBlocked(page: number = 1, limit: number = 10): Promise<PaginatedResult<AccountEntity>> {
+    const skip = (page - 1) * limit;
+    
+    const [data, total] = await this.accountsRepo.findAndCount({
       where: { isActive: false, isPending: false },
       relations: ['owner'],
       order: { createdAt: 'DESC' },
+      skip,
+      take: limit,
     });
+
+    return {
+      data,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   // Get accounts with unlock requests (admin only)
