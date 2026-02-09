@@ -50,7 +50,8 @@ export class AccountsService {
       currency,
       balance: '0.00',
       ownerId: userId,
-      isActive: false, // Requires admin approval
+      isActive: false,
+      isPending: true, // Requires admin approval
     });
 
     return await this.accountsRepo.save(account);
@@ -103,7 +104,7 @@ export class AccountsService {
   // Get pending accounts (admin only)
   async findPending(): Promise<AccountEntity[]> {
     return await this.accountsRepo.find({
-      where: { isActive: false },
+      where: { isPending: true },
       relations: ['owner'],
       order: { createdAt: 'DESC' },
     });
@@ -112,7 +113,7 @@ export class AccountsService {
   // Get blocked/inactive accounts (admin only)
   async findBlocked(): Promise<AccountEntity[]> {
     return await this.accountsRepo.find({
-      where: { isActive: false },
+      where: { isActive: false, isPending: false },
       relations: ['owner'],
       order: { createdAt: 'DESC' },
     });
@@ -157,6 +158,7 @@ export class AccountsService {
   async activateAccount(accountId: string): Promise<AccountEntity> {
     const account = await this.findById(accountId);
     account.isActive = true;
+    account.isPending = false;
     return await this.accountsRepo.save(account);
   }
 

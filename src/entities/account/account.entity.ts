@@ -33,6 +33,9 @@ export class AccountEntity {
   isActive: boolean;
 
   @Column({ default: false })
+  isPending: boolean;
+
+  @Column({ default: false })
   isUnlockRequest: boolean;
 
   @Column({ type: 'timestamp', nullable: true })
