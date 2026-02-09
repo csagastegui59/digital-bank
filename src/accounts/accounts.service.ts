@@ -143,13 +143,22 @@ export class AccountsService {
 
   // Search accounts by various criteria (admin only)
   async searchAccounts(query: string): Promise<AccountEntity[]> {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const isUuid = uuidRegex.test(query);
+
     const queryBuilder = this.accountsRepo
       .createQueryBuilder('account')
       .leftJoinAndSelect('account.owner', 'owner')
-      .where('account.accountNumber LIKE :query', { query: `%${query}%` })
-      .orWhere('account.id = :exactQuery', { exactQuery: query })
-      .orWhere('account.ownerId = :exactQuery', { exactQuery: query })
-      .orderBy('account.createdAt', 'DESC');
+      .where('account.accountNumber LIKE :query', { query: `%${query}%` });
+
+    // Only search by IDs if the query is a valid UUID
+    if (isUuid) {
+      queryBuilder
+        .orWhere('account.id = :exactQuery', { exactQuery: query })
+        .orWhere('account.ownerId = :exactQuery', { exactQuery: query });
+    }
+
+    queryBuilder.orderBy('account.createdAt', 'DESC');
 
     return await queryBuilder.getMany();
   }
