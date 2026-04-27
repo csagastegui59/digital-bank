@@ -6,9 +6,9 @@ if (!process.env.DATABASE_URL) {
 }
 
 export const AppDataSource = new DataSource({
-  type: 'postgres',
+  type: 'mysql',
   url: process.env.DATABASE_URL,
-  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   synchronize: false,

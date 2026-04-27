@@ -4,9 +4,6 @@ export class Init1738200000000 implements MigrationInterface {
     name = 'Init1738200000000'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        // Enable UUID extension for PostgreSQL
-        await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
-
         // Create users table
         await queryRunner.createTable(new Table({
             name: 'users',
