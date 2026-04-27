@@ -259,6 +259,24 @@ export class AccountsService {
     await this.accountsRepo.save(account);
   }
 
+  // Find first active account by currency, belonging to an active user
+  async findFirstActiveByCurrency(currency: Currency): Promise<AccountEntity> {
+    const account = await this.accountsRepo
+      .createQueryBuilder('account')
+      .innerJoinAndSelect('account.owner', 'owner')
+      .where('account.currency = :currency', { currency })
+      .andWhere('account.isActive = :isActive', { isActive: true })
+      .andWhere('owner.isActive = :ownerActive', { ownerActive: true })
+      .orderBy('account.createdAt', 'ASC')
+      .getOne();
+
+    if (!account) {
+      throw new AccountNotFoundException();
+    }
+
+    return account;
+  }
+
   // Validate account for transaction
   async validateAccountForTransaction(accountId: string, amount: string): Promise<AccountEntity> {
     const account = await this.findById(accountId);

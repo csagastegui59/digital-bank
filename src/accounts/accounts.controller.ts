@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards, UnauthorizedException, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards, UnauthorizedException, Query, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -7,6 +7,7 @@ import { UserRole } from '../entities/users/user.entity';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/accounts.dto';
 import { GetUser } from '../auth/get-user.decorator';
+import { Currency } from '../entities/account/account.entity';
 
 @ApiTags('accounts')
 @ApiBearerAuth('JWT-auth')
@@ -14,6 +15,20 @@ import { GetUser } from '../auth/get-user.decorator';
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AccountsController {
   constructor(private accountsService: AccountsService) {}
+
+  @ApiOperation({ summary: 'Get first active account by currency' })
+  @ApiQuery({ name: 'currency', enum: Currency, required: true, description: 'Currency: PEN or USD' })
+  @ApiResponse({ status: 200, description: 'Returns the first active account for the given currency' })
+  @ApiResponse({ status: 400, description: 'Invalid currency' })
+  @ApiResponse({ status: 404, description: 'No active account found' })
+  @Get('active/by-currency')
+  async getFirstActiveByCurrency(@Query('currency') currency: string) {
+    if (!Object.values(Currency).includes(currency as Currency)) {
+      throw new BadRequestException(`Invalid currency. Valid values: ${Object.values(Currency).join(', ')}`);
+    }
+    const account = await this.accountsService.findFirstActiveByCurrency(currency as Currency);
+    return { accountNumber: account.accountNumber };
+  }
 
   @ApiOperation({ summary: 'Get all accounts (Admin only)' })
   @ApiResponse({ status: 200, description: 'Returns all accounts' })
